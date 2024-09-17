@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Student Form</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <h1 class="headerh">Student Form</h1>
+    <form class="one">
+        <center>
+            <table class="tablemain" border="2">
+                <tr>
+                    <td><h3 class="onen">Name</h3></td>
+                    <td><input style="width: 175px; margin-left: 3px;" class="input1" /></td>
+                </tr>
+                <tr>
+                    <td><h3 class="onen">Age</h3></td>
+                    <td><h3><input style="width:175px;" class="input2" type="number" /></h3></td>
+                </tr>
+                <tr>
+                    <td><h3 class="onen">Gender</h3></td>
+                    <td>
+                        <input class="input3" value="Male" name="same" type="radio" />Male
+                        <input class="input33" value="Female" name="same" type="radio" />Female
+                    </td>
+                </tr>
+                <tr>
+                    <td><h3 class="onen">Course</h3></td>
+                    <td>
+                        <select class="input4">
+                            <option>HTML</option>
+                            <option>CSS</option>
+                            <option>JavaScript</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><h3 class="onen">Email</h3></td>
+                    <td><h3><input style="width:175px;" class="input5" type="email" /></h3></td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align:center">
+                        <button class="savebutton" type="button" onclick="submit1()">Save</button>
+                    </td>
+                </tr>
+            </table>
+        </center>
+        <center>
+            <h2 class="note">
+                Note: You cannot delete the details you entered once the page has reloaded.
+
+            </h2>
+            <table class="table2" border="1">
+                <tr>
+                    <td><h3>Name</h3></td>
+                    <td><h3>Age</h3></td>
+                    <td><h3>Gender</h3></td>
+                    <td><h3>Course</h3></td>
+                    <td><h3>Email</h3></td>
+                    <td><h3>Action</h3></td>
+                </tr>
+            </table>
+        </center>
+    </form>
+
+    <style>
+        .headerh {
+            text-align: center;
+        }
+
+        .table2 {
+            margin-top: 35px;
+        }
+
+            .table2 tr {
+                background-color: lightgray;
+            }
+
+        .onen {
+            background-color: white;
+            padding: 0px;
+        }
+
+        .tablemain {
+            background-color: white;
+            margin: 0px;
+            padding: 0px;
+        }
+
+            .tablemain tr, td, h3 {
+                background-color: lightgrey;
+                margin: 4px;
+                padding: 0px;
+            }
+
+            .tablemain input {
+                display: inline-block;
+                justify-content: center;
+            }
+
+        .savebutton {
+            background-color: lightskyblue;
+            width: 265px;
+        }
+    </style>
+
+    <!-- Ensure that the script tag for modules is correct -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBp6fK0zShrrg3YvxZi3CgwEZywnP7i0p0",
+            authDomain: "student-form-d13bf.firebaseapp.com",
+            projectId: "student-form-d13bf",
+            storageBucket: "student-form-d13bf.appspot.com",
+            messagingSenderId: "794560237561",
+            appId: "1:794560237561:web:2e865f376775b85a857728",
+            measurementId: "G-P5W2RTFTLP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Handle form submission
+        window.submit1 = async function submit1() {
+            const input1 = document.querySelector('.input1').value;
+            const input2 = document.querySelector('.input2').value;
+            const gender = document.querySelector('input[name="same"]:checked') ? document.querySelector('input[name="same"]:checked').value : 'Male';
+            const input4 = document.querySelector('.input4').value;
+            const input5 = document.querySelector('.input5').value;
+
+            if (!input1 || !input2 || !input5) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            const studentData = {
+                name: input1,
+                age: input2,
+                gender: gender,
+                course: input4,
+                email: input5
+            };
+
+            try {
+                const docRef = await addDoc(collection(db, "students"), studentData);
+                console.log("Document written with ID: ", docRef.id);
+
+                const table2 = document.querySelector('.table2');
+                const tr1 = document.createElement('tr');
+                tr1.setAttribute('data-id', docRef.id); // Store the document ID in a data attribute
+
+                Object.values(studentData).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr1.appendChild(td);
+                });
+
+                const deleteb = document.createElement('button');
+                deleteb.type = 'button';
+                deleteb.textContent = 'Delete';
+                deleteb.style.backgroundColor = 'red';
+                deleteb.onclick = function (event) {
+                    deletefu(event);
+                };
+                tr1.appendChild(deleteb);
+                table2.appendChild(tr1);
+
+                document.querySelector('form').reset(); // Reset form fields
+
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert('Error adding document. Please try again.');
+            }
+        }
+
+        // Function to delete a row
+        async function deletefu(event) {
+            const tr = event.target.closest('tr');
+            const docId = tr.getAttribute('data-id'); // Retrieve the document ID
+
+            try {
+                await deleteDoc(doc(db, "students", docId)); // Delete the document from Firestore
+                console.log("Document successfully deleted!");
+
+                tr.remove(); // Remove the row from the table
+
+            } catch (e) {
+                console.error("Error deleting document: ", e);
+                alert('Error deleting document. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
